@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>Portal dos Filhos — Casa de Caridade</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#b8860b">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- iOS: app em tela cheia -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Portal dos Filhos">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%; width: 100%;
+      background: #1a140a; overflow: hidden;
+    }
+    #app {
+      position: fixed; inset: 0;
+      border: 0; width: 100%; height: 100%;
+    }
+    /* Tela de carregamento enquanto o portal abre */
+    #splash {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 18px;
+      background: #f6efdd; color: #3a3329;
+      font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+      transition: opacity .4s ease; z-index: 10;
+    }
+    #splash img { width: 110px; height: 110px; border-radius: 22px; }
+    #splash .t { font-size: 16px; font-weight: 700; letter-spacing: .3px; }
+    #splash .s { font-size: 12px; color: #8a7d63; text-transform: uppercase; letter-spacing: 2px; }
+    .spin { width: 26px; height: 26px; border: 3px solid #e6d4a6;
+            border-top-color: #b8860b; border-radius: 50%;
+            animation: r 1s linear infinite; }
+    @keyframes r { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="splash">
+    <img src="icon-192.png" alt="Casa de Caridade">
+    <div class="t">Portal dos Filhos</div>
+    <div class="s">Casa de Caridade</div>
+    <div class="spin"></div>
+  </div>
+
+  <iframe id="app"
+          src="https://portal-casa-caridade.streamlit.app/?embed=true"
+          allow="camera; clipboard-read; clipboard-write; fullscreen"
+          referrerpolicy="origin"></iframe>
+
+  <script>
+    // Esconde o splash quando o portal terminar de carregar.
+    var frame = document.getElementById('app');
+    var splash = document.getElementById('splash');
+    function hideSplash() {
+      if (!splash) return;
+      splash.style.opacity = '0';
+      setTimeout(function () { splash.style.display = 'none'; }, 450);
+    }
+    frame.addEventListener('load', function () { setTimeout(hideSplash, 800); });
+    // Garante que o splash não trave caso o evento 'load' não dispare.
+    setTimeout(hideSplash, 6000);
+
+    // Service worker (necessário para o app ser "instalável" no Android).
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>
