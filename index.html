@@ -41,6 +41,26 @@
             border-top-color: #b8860b; border-radius: 50%;
             animation: r 1s linear infinite; }
     @keyframes r { to { transform: rotate(360deg); } }
+
+    /* Botão flutuante "Instalar aplicativo" */
+    #install {
+      position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+      z-index: 20; display: none; align-items: center; gap: 8px;
+      background: #b8860b; color: #fff; border: 0; border-radius: 999px;
+      padding: 12px 22px; font-size: 15px; font-weight: 700; cursor: pointer;
+      font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+      box-shadow: 0 6px 20px rgba(0,0,0,.35);
+    }
+    /* Instruções para iPhone (Safari não tem botão de instalar) */
+    #ios-tip {
+      position: fixed; left: 12px; right: 12px; bottom: 16px; z-index: 20;
+      display: none; background: #fffdf8; color: #3a3329; border: 1px solid #e6d4a6;
+      border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.5;
+      font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+      box-shadow: 0 6px 20px rgba(0,0,0,.25);
+    }
+    #ios-tip b { color: #b8860b; }
+    #ios-tip .x { float: right; color: #8a7d63; font-weight: 700; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -55,6 +75,14 @@
           src="https://casa-caridades-sbi.streamlit.app/?embed=true"
           allow="camera; clipboard-read; clipboard-write; fullscreen"
           referrerpolicy="origin"></iframe>
+
+  <button id="install">⬇️ Instalar aplicativo</button>
+
+  <div id="ios-tip">
+    <span class="x" onclick="document.getElementById('ios-tip').style.display='none'">✕</span>
+    Para instalar: toque em <b>Compartilhar</b> e depois em
+    <b>“Adicionar à Tela de Início”</b>.
+  </div>
 
   <script>
     // Esconde o splash quando o portal terminar de carregar.
@@ -74,6 +102,38 @@
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('sw.js').catch(function () {});
       });
+    }
+
+    // Detecta se já está rodando instalado (standalone) — aí não mostra nada.
+    var standalone = window.matchMedia('(display-mode: standalone)').matches
+                     || window.navigator.standalone === true;
+
+    // ── Android/Chrome: captura o evento e mostra o botão "Instalar" ──
+    var deferredPrompt = null;
+    var btn = document.getElementById('install');
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (!standalone) btn.style.display = 'inline-flex';
+    });
+    btn.addEventListener('click', function () {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.finally(function () {
+        deferredPrompt = null;
+        btn.style.display = 'none';
+      });
+    });
+    window.addEventListener('appinstalled', function () {
+      btn.style.display = 'none';
+    });
+
+    // ── iPhone/iPad (Safari): não dispara beforeinstallprompt → mostra dica ──
+    var isiOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+    if (isiOS && !standalone) {
+      setTimeout(function () {
+        document.getElementById('ios-tip').style.display = 'block';
+      }, 2500);
     }
   </script>
 </body>
